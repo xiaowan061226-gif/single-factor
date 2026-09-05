@@ -1,7 +1,7 @@
-# 单因子量化研究：阶段 1–6
+# 单因子量化研究：阶段 1–7
 
-当前完成时间对齐、横截面统计、组合回测三个技术探针，以及正式包的配置、研究模块、回测和端到端 CLI。
-详见 [roadmap](single-factor-quant-progressive-roadmap.md)、[阶段 1–4 验收记录](docs/acceptance-stages-1-4.md)、[阶段 5 迁移记录](docs/acceptance-stage-5.md) 和 [阶段 6 迁移记录](docs/acceptance-stage-6.md)。
+当前完成时间对齐、横截面统计、组合回测三个技术探针，以及正式包的配置、研究模块、回测、端到端 CLI 和本地 CSV 诊断。
+详见 [roadmap](single-factor-quant-progressive-roadmap.md)、[阶段 1–4 验收记录](docs/acceptance-stages-1-4.md)、[阶段 5 迁移记录](docs/acceptance-stage-5.md)、[阶段 6 迁移记录](docs/acceptance-stage-6.md) 和 [阶段 7 验收记录](docs/acceptance-stage-7.md)。
 
 ## 安装和运行
 
@@ -16,7 +16,7 @@ python -m venv .venv
 .venv\Scripts\python.exe -m spike.backtest_demo
 .venv\Scripts\python.exe main.py --demo
 .venv\Scripts\python.exe -m single_factor_quant --demo
-.venv\Scripts\python.exe main.py --input prices.csv
+.venv\Scripts\python.exe main.py --input examples/sample_prices.csv
 ```
 
 依赖清单安装本地包及 pandas、numpy、pytest；正式包采用 `src/` 布局。
@@ -36,12 +36,20 @@ src/single_factor_quant/
     preprocess/cross_section.py # 按日期去极值和标准化
     research/                  # 未来标签、IC/RankIC、分组研究
     backtest/simple_backtest.py # 次日执行、漂移权重、交易成本
+    diagnostics/data_profile.py # CSV 画像与流水线可用性诊断
     pipeline.py                 # 端到端正式编排
+examples/sample_prices.csv      # 10 股票、300 交易日的确定性本地示例
 docs/acceptance-stages-1-4.md   # 本次验收证据
 main.py                        # 薄转发入口
 ```
 
 根目录的 `factor_alignment.py`、`cross_section.py`、`backtest_spike.py` 保留原有公开导入接口。阶段 1–2 的 spike 仅保留黄金数据、演示与兼容导入；算法实现统一位于正式包。
+
+## 本地 CSV 诊断
+
+`--input` 会先使用严格 loader 检查数据，再输出日期范围、股票数、每股观测数的最小值/中位数/最大值、够 252 条历史的股票数、质量问题计数、两种因子覆盖率、未来标签覆盖率、有效 IC 日期、分组跳过日期和已执行调仓次数。
+
+历史不足时会提示每股至少需要 253 行；默认五分组无法形成时会提示至少需要 5 只同时拥有因子和标签的股票。诊断只读取本地 CSV，不下载行情、连接数据库、推测复权或修复输入数据。
 
 ## CSV 约定
 
@@ -89,4 +97,5 @@ labels = calculate_forward_returns(prices, config.forward_horizon)
 当前回测探针要求完整的日期 × 股票价格面板，缺交易日价格会明确失败；尚未建模停牌撮合、滑点或退市处置。
 
 阶段 5 已完成正式因子与研究模块迁移；本节中“阶段 1–4”的历史验收说明由本次迁移记录补充和更新。
+阶段 7 已完成本地 CSV 诊断；本节中关于 CLI 与真实 CSV 适配尚未实施的历史说明由阶段 6–7 验收记录补充和更新。
 这份验收限于阶段 1–4；正式研究模块迁移、全链路 CLI、真实 CSV 研究诊断和最终报告仍按后续阶段实施。

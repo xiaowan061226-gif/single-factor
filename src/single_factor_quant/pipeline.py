@@ -7,6 +7,7 @@ import pandas as pd
 
 from .backtest.simple_backtest import BacktestResult, run_top_quantile_backtest
 from .config import ResearchConfig
+from .diagnostics.data_profile import DataDiagnostics, build_data_diagnostics, require_usable_research
 from .factors.momentum import calculate_momentum
 from .preprocess.cross_section import cross_sectional_zscore
 from .research.forward_return import calculate_forward_returns
@@ -23,6 +24,7 @@ class ResearchPipelineResult:
     ic_summary: pd.DataFrame
     quintiles: QuintileResult
     backtest: BacktestResult
+    diagnostics: DataDiagnostics
 
 
 def run_research_pipeline(prices: pd.DataFrame, config: ResearchConfig | None = None) -> ResearchPipelineResult:
@@ -48,7 +50,9 @@ def run_research_pipeline(prices: pd.DataFrame, config: ResearchConfig | None = 
         backtest_input, "factor_zscore", settings.rebalance_interval, settings.top_fraction,
         settings.transaction_cost, settings.annualization_days,
     )
-    return ResearchPipelineResult(factor_data, daily_ic, summarize_ic(daily_ic), quintiles, backtest)
+    diagnostics = build_data_diagnostics(prices, factor_data, daily_ic, quintiles, backtest, settings)
+    require_usable_research(diagnostics, settings)
+    return ResearchPipelineResult(factor_data, daily_ic, summarize_ic(daily_ic), quintiles, backtest, diagnostics)
 
 
 def make_demo_price_panel(periods: int = 300, stocks: int = 10) -> pd.DataFrame:
