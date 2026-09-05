@@ -26,8 +26,10 @@ def test_demo_pipeline_produces_ordered_key_safe_finite_outputs() -> None:
 
 def test_cli_accepts_demo_and_local_csv(tmp_path, capsys) -> None:
     assert main(["--demo"]) == 0
-    assert "initial_nav=1.000000" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "date_range=" in output and "mean_ic=" in output and "top_20_cumulative_return=" in output
+    assert "warning: close should be adjusted" in output
     path = tmp_path / "demo_prices.csv"
     make_demo_price_panel().to_csv(path, index=False)
     assert main(["--input", str(path)]) == 0
-    assert "final_nav=" in capsys.readouterr().out
+    assert "rebalances=" in capsys.readouterr().out

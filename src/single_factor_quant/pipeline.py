@@ -23,8 +23,10 @@ class ResearchPipelineResult:
     daily_ic: pd.DataFrame
     ic_summary: pd.DataFrame
     quintiles: QuintileResult
+    quintile_mean_returns: pd.DataFrame
     backtest: BacktestResult
     diagnostics: DataDiagnostics
+    config: ResearchConfig
 
 
 def run_research_pipeline(prices: pd.DataFrame, config: ResearchConfig | None = None) -> ResearchPipelineResult:
@@ -52,7 +54,10 @@ def run_research_pipeline(prices: pd.DataFrame, config: ResearchConfig | None = 
     )
     diagnostics = build_data_diagnostics(prices, factor_data, daily_ic, quintiles, backtest, settings)
     require_usable_research(diagnostics, settings)
-    return ResearchPipelineResult(factor_data, daily_ic, summarize_ic(daily_ic), quintiles, backtest, diagnostics)
+    return ResearchPipelineResult(
+        factor_data, daily_ic, summarize_ic(daily_ic), quintiles, quintiles.mean_returns,
+        backtest, diagnostics, settings,
+    )
 
 
 def make_demo_price_panel(periods: int = 300, stocks: int = 10) -> pd.DataFrame:
